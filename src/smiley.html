@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="SE">
+<head>
+  <meta charset="utf-8"/>
+  <title>Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    img {
+      position: absolute;
+    }
+  </style>
+  <script>
+    let stop = false;
+    let vertical = true;
+    let x = 0;
+    let y = 0;
+    let x2 = 0;
+    let y2 = 0;
+
+    function resetHorizontal() {
+      stop = true;
+      vertical = false;
+    }
+
+    function resetVertical() {
+      stop = true;
+      vertical = true;
+    }
+
+    function init() {
+      let img = document.querySelector("img");
+      img.style.left = (window.innerWidth - 72) / 2 + "px";
+      img.style.top = (window.innerHeight - 72) / 2 + "px";
+
+      window.addEventListener('mousedown', handleMouseDown);
+      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener("touchstart", handleTouchDown);
+      window.addEventListener("touchend", handleTouchUp);
+      window.addEventListener("touchmove", handleTouchMove);
+
+
+    }
+
+
+    function bounce(conf) {
+      let img = document.querySelector("img");
+      let {cx, cy, vx, vy, gravity, damping, traction, resistance} = conf;
+
+      function animate() {
+        img.style.left = cx + "px";
+        img.style.top = cy + "px";
+
+        vy += gravity;
+
+        vx *= resistance;
+        vy *= resistance;
+
+
+        cx += vx;
+        cy += vy;
+
+        if (cx >= window.innerWidth - 72) {
+          vx = -vx * damping;
+          cx = window.innerWidth - 72;
+        } else if (cx <= 0) {
+          vx = -vx * damping;
+          cx = 0;
+        }
+        if (cy >= window.innerHeight - 72) {
+          vy = -vy * damping;
+          cy = window.innerHeight - 72;
+          vx *= traction;
+        } else if (cy <= 0) {
+          vy = -vy * damping;
+          cy = 0;
+        }
+
+        if (!stop) {
+          requestAnimationFrame(animate);
+        } else {
+          img.style.left = (window.innerWidth - 72) / 2 + "px";
+          img.style.top = (window.innerHeight - 72) / 2 + "px";
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    function handleMouseDown(e) {
+
+      console.log(e.target);
+      down(e.pageX, e.pageY);
+    }
+
+    function handleMouseUp(e) {
+      up(e.pageX, e.pageY);
+    }
+
+    function handleTouchDown(e) {
+      console.log(e.target);
+      let {pageX, pageY} = e.touches[0];
+      down(pageX, pageY);
+      e.preventDefault();
+    }
+
+    function handleTouchUp(e) {
+
+      up(x2, y2);
+      e.preventDefault();
+    }
+
+    function handleTouchMove(e) {
+      let {pageX, pageY} = e.touches[0];
+      x2 = pageX;
+      y2 = pageY;
+      e.preventDefault();
+    }
+
+    function down(pageX, pageY) {
+      x = pageX;
+      y = pageY;
+      stop = true;
+      console.log("down: x=" + x + ", y=" + y);
+    }
+
+    function up(pageX, pageY) {
+      console.log("up")
+      stop = false;
+      console.log("up: dx=" + (pageX - x) + ", dy=" + (pageY - y));
+
+      if (vertical) {
+        bounce({
+          cx: (window.innerWidth - 72) / 2,
+          cy: (window.innerHeight - 72) / 2,
+          vx: -((pageX - x) / 20),
+          vy: -((pageY - y) / 20),
+          gravity: 0.05,
+          damping: 0.9,
+          traction: 0.8,
+          resistance: 1
+        });
+      } else {
+        bounce({
+          cx: (window.innerWidth - 72) / 2,
+          cy: (window.innerHeight - 72) / 2,
+          vx: -((pageX - x) / 20),
+          vy: -((pageY - y) / 20),
+          gravity: 0,
+          damping: 1,
+          traction: 1,
+          resistance: 0.99
+        });
+      }
+    }
+
+
+    function startAnimation() {
+      let img = document.querySelector("img");
+      let angle = Math.PI / 2;
+
+      function animate(time, lastTime) {
+        if (lastTime != null) {
+          angle += (time - lastTime) * 0.001;
+        }
+        img.style.top = (100 + Math.sin(angle) * 20) + "px";
+        img.style.left = (400 + Math.sin(angle) * 200) + "px";
+        if (!stop) {
+          requestAnimationFrame(newTime => animate(newTime, time));
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+  </script>
+</head>
+<body onload="init()">
+<img id="myImage"
+     alt="🙂"
+     src="data:image/png;base64,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">
+<p>Click and drag!</p>
+<button onclick="resetVertical()">Reset vertical</button>
+<button onclick="resetHorizontal()">Reset horizontal</button>
+</body>
+</html>
+
